@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    environment:
+      MINIO_ACCESS_KEY: egoist
+      MINIO_SECRET_KEY: egoist123
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+  catalog-service:
+    build:
+      context: ./services/catalog-service
+      dockerfile: Dockerfile
+    container_name: catalog-service
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/catalogdb
+    depends_on:
+      - mongo
+
+  media-service:
+    build:
+      context: ./services/media-service
+      dockerfile: Dockerfile
+    container_name: media-service
+    ports:
+      - "8086:8086"
+    environment:
+      MINIO_URL: http://minio:9000
+      MINIO_ACCESS_KEY: egoist
+      MINIO_SECRET_KEY: egoist123
+      MINIO_BUCKET: product-images
+    depends_on:
+      - minio
+
+volumes:
+  mongo_data:
+  minio_data:
