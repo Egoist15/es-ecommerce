@@ -6,7 +6,9 @@ import com.es.catalog.model.Product;
 import com.es.catalog.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -20,9 +22,9 @@ public class ProductController {
         this.service = service;
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductResponseDto create(@Valid @RequestBody ProductRequestDto request) {
+    public ProductResponseDto createProduct(@Valid @RequestBody ProductRequestDto request) {
         return service.createProduct(request);
     }
 
@@ -37,10 +39,13 @@ public class ProductController {
         return service.getProductById(id);
     }
 
-    @PutMapping("/{id}")
-    public ProductResponseDto update(@PathVariable String id, @Valid @RequestBody ProductRequestDto request) {
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ProductResponseDto update(
+            @PathVariable String id,
+            @Valid @RequestBody ProductRequestDto request) {
         return service.updateProduct(id, request);
     }
+
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

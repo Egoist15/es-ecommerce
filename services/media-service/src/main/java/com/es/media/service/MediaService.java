@@ -24,32 +24,22 @@ public class MediaService {
         this.minioClient = minioClient;
     }
 
-    public String uploadFile(MultipartFile file) throws Exception {
+    public String uploadFile(MultipartFile file) {
         try {
-            String filename = UUID.randomUUID() + "-" + file.getOriginalFilename();
+            String objectName = UUID.randomUUID() + "-" + file.getOriginalFilename();
 
-            boolean found = minioClient.bucketExists(
-                    BucketExistsArgs.builder().bucket(bucketName).build()
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .stream(file.getInputStream(), file.getSize(), -1)
+                            .contentType(file.getContentType())
+                            .build()
             );
-            if (!found) {
-                minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-            }
 
-            try (InputStream is = file.getInputStream()) {
-                minioClient.putObject(
-                        PutObjectArgs.builder()
-                                .bucket(bucketName)
-                                .object(filename)
-                                .stream(is, file.getSize(), -1)
-                                .contentType(file.getContentType())
-                                .build()
-                );
-            }
-
-            return String.format("%s/%s/%s", minioUrl, bucketName, filename);
-
-        } catch (MinioException e) {
-            throw new RuntimeException("Error uploading file to MinIO: " + e.getMessage(), e);
+            return String.format("http://localhost:9000/%s/%s", bucketName, objectName);
+        } catch (Exception e) {
+            throw new RuntimeException("Error uploading file to MinIO", e);
         }
     }
 
